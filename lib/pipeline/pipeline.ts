@@ -6,6 +6,7 @@ import { positivePrompt, negativePrompt } from "../prompts/render-brief";
 import { printReviewSystem, printReviewContent, PRINT_REVIEW_SCHEMA } from "../prompts/print-review";
 import { ClaudeError, type Judge } from "./claude";
 import { RendererError, type Renderer } from "./renderer";
+import { checkAestheticGrounding } from "./grounding";
 import { defaultConfig, type StudioConfig } from "./config";
 import type {
   BriefResult,
@@ -117,6 +118,22 @@ export class Pipeline {
         });
       }
 
+      // The aesthetic must be traceable to the customer's own words. This is
+      // also how the neutrality rule is enforced: a shirt is for everyone, so no
+      // palette, motif, size or placement may come from an assumption about who
+      // is wearing it. We cannot read the model's reasons, but we can require it
+      // to show its working — and a stereotype has nothing to quote. An
+      // aesthetic we cannot trace does not print unseen.
+      const grounding = checkAestheticGrounding(brief, request);
+      if (!grounding.grounded) {
+        return this.result("needs_human", {
+          intake,
+          brief,
+          flags: [...flags],
+          grounding,
+        });
+      }
+
       // The art director is told what lettering was approved, but it does not get
       // to be the one who decides. Anything it put in that field which intake did
       // not approve is stripped before it can reach the renderer.
@@ -136,7 +153,7 @@ export class Pipeline {
         ];
 
         const rendered = await this.renderer.render({
-          positive: positivePrompt(brief.spec, lettering, counters),
+          positive: positivePrompt(brief.spec, lettering, counters, brief.aesthetic),
           negative: negativePrompt(brief.spec, lettering),
           aspect: "1:1",
         });
@@ -156,6 +173,7 @@ export class Pipeline {
             reviews,
             flags: [...flags],
             attempts,
+            grounding,
           });
         }
 
@@ -170,6 +188,7 @@ export class Pipeline {
             reviews,
             flags: [...flags],
             attempts,
+            grounding,
             customerMessage: DECLINE_MESSAGE,
           });
         }
@@ -186,6 +205,7 @@ export class Pipeline {
         reviews: lastReviews,
         flags: [...flags],
         attempts,
+        grounding,
       });
     } catch (err) {
       if (err instanceof ClaudeError || err instanceof RendererError) {

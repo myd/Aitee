@@ -1,4 +1,4 @@
-import type { DesignSpec, Lettering } from "../pipeline/types";
+import type { BriefResult, DesignSpec, Lettering } from "../pipeline/types";
 
 /**
  * Stage 3. Assembles the image-generation prompt from the art director's brief.
@@ -79,11 +79,16 @@ export function positivePrompt(
   spec: DesignSpec,
   lettering: Lettering,
   counterInstructions: string[] = [],
+  aesthetic?: BriefResult["aesthetic"],
 ): string {
   const inks = spec.palette?.inks ?? [];
   const lines: string[] = [];
 
   lines.push(spec.one_sentence.trim(), "");
+  // The aesthetic leads, because it governs how everything below is drawn. It
+  // was derived from the customer's own words and nothing else — see
+  // checkAestheticGrounding.
+  if (aesthetic?.world) lines.push(`AESTHETIC: ${aesthetic.world}`, "");
   lines.push(`COMPOSITION: ${spec.composition}`);
   lines.push(`READS IN THIS ORDER: ${spec.focal_hierarchy}`);
   lines.push(`LINE AND TEXTURE: ${spec.line_and_texture}`);

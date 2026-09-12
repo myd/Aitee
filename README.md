@@ -54,6 +54,50 @@ The rule that overrides everything else: **push the treatment as far as you
 like, never push the subject.** Creativity that loses the customer's corgi is
 not creativity, it is a returned parcel.
 
+## Where the aesthetic comes from
+
+This is the part that decides whether the shirt is any good. Most customers
+never name a style — they describe a thing, and *how* they describe it says
+which world it belongs in. Same animal, three unrelated shirts:
+
+| What they wrote | What it reads as | The shirt |
+|---|---|---|
+| "my corgi, who has never once come when called" | wry, self-deprecating, a joke against themselves | deadpan field-guide plate, linework, straight face |
+| "FOR MY DOG. THE BEST DOG." | declarative, loud, no hedging | poster-loud slab shapes, high contrast, a monument |
+| "the last photo I have of my dog" | elegiac, spare | quiet ink, one small subject in a large empty field |
+
+The difference was never in the subject. So the prompt reads for register,
+vocabulary, what was left out, whether a joke is warm or sharp, sentence
+length, even capitalisation — then names the aesthetic world and **quotes the
+words that put it there**.
+
+## A shirt is for everyone
+
+No palette, aesthetic, motif, print size or placement is ever chosen from an
+assumption about who is wearing it. There is no colour that belongs to a
+gender, no shape that belongs to an age, no ornament that belongs to an
+ethnicity. A brief reaching for pastels because the request said "her", or a
+generic "folk" motif because a heritage was named, has stopped listening to the
+customer and started decorating a stereotype — and it threw away the real
+evidence in front of it to do so.
+
+That rule is enforced, not just stated. The evidence requirement above is the
+mechanism: **a stereotype has nothing to quote.** Every quote is checked in code
+against the customer's actual words (`lib/pipeline/grounding.ts`), matched
+loosely on whitespace, case and curly quotes but never on wording — paraphrase
+is not evidence. An aesthetic that cannot be traced back to something the
+customer wrote does not get rendered at all; it routes straight to human review.
+
+A bare request like "a fox" genuinely carries no signal. Saying so honestly is
+allowed, and is paid for with a defence of the choice made instead — what is not
+allowed is inventing evidence to look diligent.
+
+When a request *does* mention a person, that is subject matter and occasion, and
+is used as exactly that. "For my grandmother, who grew roses" tells you about
+roses and about tenderness; it does not tell you to use soft pink. "For my
+six-year-old" changes the printed width, because the garment is smaller; it does
+not summon cartoon animals unless the way they wrote it asks for them.
+
 There is also an explicit ban list for what renderers reach for when nobody
 directs them — the circular badge with the ribbon banner, the vintage sunset
 stripe, mandala symmetry standing in for an idea, render-speak like "8k,
@@ -67,6 +111,7 @@ means for the order.
 
 - The pre-screen found nothing.
 - Intake approved it, and did not mark it amber.
+- The aesthetic traced back to the customer's own words.
 - **Both** reviewers returned `pass`. One dissent holds the order.
 - Both reported confidence at or above 0.9.
 - Neither found an accidental resemblance.
@@ -99,14 +144,14 @@ npm run dev
 ```
 
 ```bash
-npm test        # 29 tests, no network needed
+npm test        # 39 tests, no network needed
 npm run typecheck
 npm run lint
 ```
 
 The tests fake the model and the renderer, so they exercise every gate — the
-retry-on-craft-failure path, the never-retry-on-safety path, the fail-closed
-path — in about a third of a second.
+retry-on-craft-failure path, the never-retry-on-safety path, the ungrounded-
+aesthetic path, the fail-closed path — in about a third of a second.
 
 ## The one thing not wired up
 

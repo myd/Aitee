@@ -27,6 +27,14 @@ export function brief(overrides: Partial<BriefResult> = {}): BriefResult {
       occasion: "",
       non_negotiables: [],
     },
+    aesthetic: {
+      register: "wry, self-deprecating",
+      world: "deadpan field-guide linework",
+      signal_strength: "implied",
+      // Must appear verbatim in the REQUEST used by the pipeline tests.
+      evidence: [{ quote: "make it interesting", reads_as: "invites a straight face, not a cute cartoon" }],
+      chosen_without_signal_because: "",
+    },
     obvious_version: "a corgi head, centred, in flat vector",
     concepts: [],
     judgement: [],

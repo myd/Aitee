@@ -1,4 +1,5 @@
 import type { Flag } from "../policy/policy";
+import type { GroundingCheck } from "./grounding";
 
 /** What the intake reviewer returns. Mirrors INTAKE_SCHEMA. */
 export interface IntakeResult {
@@ -44,6 +45,13 @@ export interface BriefResult {
     feeling: string;
     occasion: string;
     non_negotiables: string[];
+  };
+  aesthetic: {
+    register: string;
+    world: string;
+    signal_strength: "explicit" | "implied" | "absent";
+    evidence: Array<{ quote: string; reads_as: string }>;
+    chosen_without_signal_because: string;
   };
   obvious_version: string;
   concepts: Array<{ axis: string; pitch: string; at_three_metres: string; why_not_obvious: string }>;
@@ -100,5 +108,7 @@ export interface PipelineResult {
   render?: RenderedImage;
   reviews?: ReviewResult[];
   customerMessage?: string;
+  /** Whether the aesthetic could be traced to the customer's own words. */
+  grounding?: GroundingCheck;
   error?: string;
 }

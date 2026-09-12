@@ -206,6 +206,42 @@ test("the art director cannot smuggle in lettering intake never approved", async
   assert.ok(!renderer.calls[0].positive.includes("GOOD BOY"));
 });
 
+test("an aesthetic that cannot be traced to the customer's words never prints unseen", async () => {
+  const { pipeline, renderer } = build({
+    intake: intake(),
+    brief: brief({
+      aesthetic: {
+        register: "feminine",
+        world: "soft pastels and florals",
+        signal_strength: "implied",
+        evidence: [{ quote: "she'll love something pretty", reads_as: "soft palette" }],
+        chosen_without_signal_because: "",
+      },
+    }),
+    reviews: [[review(), review()]],
+  });
+
+  const result = await pipeline.run(REQUEST);
+  assert.equal(result.status, "needs_human");
+  assert.equal(result.grounding?.grounded, false);
+  assert.equal(renderer.calls.length, 0, "nothing should be rendered from an untraceable aesthetic");
+});
+
+test("the aesthetic reaches the renderer, ahead of the composition", async () => {
+  const { pipeline, renderer } = build({
+    intake: intake(),
+    brief: brief(),
+    reviews: [[review(), review()]],
+  });
+
+  await pipeline.run(REQUEST);
+  assert.match(renderer.calls[0].positive, /AESTHETIC: deadpan field-guide linework/);
+  assert.ok(
+    renderer.calls[0].positive.indexOf("AESTHETIC:") < renderer.calls[0].positive.indexOf("COMPOSITION:"),
+    "the aesthetic governs how everything else is drawn, so it leads",
+  );
+});
+
 test("every result records the policy version it was judged against", async () => {
   const { pipeline } = build({ intake: intake(), brief: brief(), reviews: [[review(), review()]] });
   const result = await pipeline.run(REQUEST);
