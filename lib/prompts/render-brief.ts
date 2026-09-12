@@ -65,7 +65,8 @@ function letteringInstruction(lettering: Lettering): string {
       `anywhere: ${JSON.stringify(lettering.exact_string)}. Spell it exactly as written, ` +
       "including capitalisation and punctuation. Every letter must be a real, correctly " +
       "formed letter. Do not add a second line, a date, a monogram, a studio mark or any " +
-      "decorative lettering."
+      "decorative lettering." +
+      (lettering.typeface.trim().length > 0 ? ` Set it in: ${lettering.typeface}` : "")
     );
   }
   return (

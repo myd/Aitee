@@ -1,4 +1,4 @@
-import type { BriefResult, IntakeResult, RenderedImage, ReviewResult } from "../lib/pipeline/types";
+import type { BriefResult, IntakeResult, Lettering, RenderedImage, ReviewResult } from "../lib/pipeline/types";
 import type { Judge, StructuredCall } from "../lib/pipeline/claude";
 import type { Renderer } from "../lib/pipeline/renderer";
 
@@ -15,6 +15,30 @@ export function intake(overrides: Partial<IntakeResult> = {}): IntakeResult {
     customer_message: "",
     ...overrides,
   };
+}
+
+/**
+ * Typeface evidence must be verbatim in whatever request the test uses, since
+ * grounding checks it — so the default quotes the shared pipeline REQUEST.
+ */
+export function lettering(overrides: Partial<Lettering> = {}): Lettering {
+  return {
+    has_text: false,
+    exact_string: "",
+    typeface: "",
+    typeface_evidence: [],
+    ...overrides,
+  };
+}
+
+export function setText(exact: string, overrides: Partial<Lettering> = {}): Lettering {
+  return lettering({
+    has_text: true,
+    exact_string: exact,
+    typeface: "narrow grotesque, single weight, flat terminals, set tight",
+    typeface_evidence: ["make it interesting"],
+    ...overrides,
+  });
 }
 
 export function brief(overrides: Partial<BriefResult> = {}): BriefResult {
@@ -52,7 +76,7 @@ export function brief(overrides: Partial<BriefResult> = {}): BriefResult {
       placement: { position: "front_centre", printed_width_cm: 26 },
       omit: ["collar", "name tag"],
     },
-    lettering: { has_text: false, exact_string: "" },
+    lettering: lettering(),
     failure_pass: [{ likely_error: "drifts toward a shiba", counter_instruction: "Short legs, long body." }],
     ...overrides,
   };

@@ -34,6 +34,10 @@ export interface DesignSpec {
 export interface Lettering {
   has_text: boolean;
   exact_string: string;
+  /** Letterforms described concretely enough to draw. Empty when wordless. */
+  typeface: string;
+  /** The customer's own words that chose those letterforms. Verbatim, and checked. */
+  typeface_evidence: string[];
 }
 
 /** What the art director returns. Mirrors ART_DIRECTION_SCHEMA. */

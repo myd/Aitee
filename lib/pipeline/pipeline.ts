@@ -118,13 +118,18 @@ export class Pipeline {
         });
       }
 
+      // The art director is told what lettering was approved, but it does not get
+      // to be the one who decides. Anything it put in that field which intake did
+      // not approve is stripped before it can reach the renderer.
+      const lettering = reconcileLettering(approvedText, brief.lettering);
+
       // The aesthetic must be traceable to the customer's own words. This is
       // also how the neutrality rule is enforced: a shirt is for everyone, so no
       // palette, motif, size or placement may come from an assumption about who
       // is wearing it. We cannot read the model's reasons, but we can require it
       // to show its working — and a stereotype has nothing to quote. An
       // aesthetic we cannot trace does not print unseen.
-      const grounding = checkAestheticGrounding(brief, request);
+      const grounding = checkAestheticGrounding(brief, request, lettering);
       if (!grounding.grounded) {
         return this.result("needs_human", {
           intake,
@@ -134,10 +139,6 @@ export class Pipeline {
         });
       }
 
-      // The art director is told what lettering was approved, but it does not get
-      // to be the one who decides. Anything it put in that field which intake did
-      // not approve is stripped before it can reach the renderer.
-      const lettering = reconcileLettering(approvedText);
 
       // ── Stages 3 and 4: render, then review, up to N attempts ─────────────
       let feedback: string[] = [];
@@ -326,9 +327,17 @@ export class Pipeline {
  * they are set. If a brief comes back carrying lettering intake never approved,
  * it is dropped rather than argued with.
  */
-export function reconcileLettering(approvedText: string | null): Lettering {
+export function reconcileLettering(approvedText: string | null, brief?: Lettering): Lettering {
   if (!approvedText || approvedText.length === 0) {
-    return { has_text: false, exact_string: "" };
+    // Wordless: the art director's typeface is dropped along with its text,
+    // since there is nothing to set.
+    return { has_text: false, exact_string: "", typeface: "", typeface_evidence: [] };
   }
-  return { has_text: true, exact_string: approvedText };
+  // The words come from intake; only the letterforms come from the art director.
+  return {
+    has_text: true,
+    exact_string: approvedText,
+    typeface: brief?.typeface ?? "",
+    typeface_evidence: brief?.typeface_evidence ?? [],
+  };
 }

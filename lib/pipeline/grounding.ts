@@ -1,4 +1,4 @@
-import type { BriefResult } from "./types";
+import type { BriefResult, Lettering } from "./types";
 
 /**
  * Verifies that the art director's aesthetic actually came from the customer.
@@ -25,6 +25,15 @@ export interface GroundingCheck {
   reason?: string;
 }
 
+/** Quotes that are not verbatim in the request. */
+function unquotedIn(request: string, quotes: string[]): string[] {
+  const haystack = canonical(request);
+  return quotes.filter((quote) => {
+    const needle = canonical(quote);
+    return needle.length === 0 || !haystack.includes(needle);
+  });
+}
+
 /**
  * Quotes are compared loosely on whitespace, case and quote characters — a
  * model that turns a straight apostrophe curly has still quoted faithfully —
@@ -40,7 +49,31 @@ function canonical(text: string): string {
     .toLowerCase();
 }
 
-export function checkAestheticGrounding(brief: BriefResult, request: string): GroundingCheck {
+export function checkAestheticGrounding(
+  brief: BriefResult,
+  request: string,
+  lettering?: Lettering,
+): GroundingCheck {
+  // Typography is an aesthetic decision, so it is evidenced like any other. A
+  // thin script chosen because a name sounded feminine has nothing to quote,
+  // which is precisely how it gets caught.
+  if (lettering?.has_text) {
+    if (lettering.typeface.trim().length === 0) {
+      return { grounded: false, unquoted: [], reason: "set text without describing the letterforms" };
+    }
+    const unquoted = unquotedIn(request, lettering.typeface_evidence ?? []);
+    if ((lettering.typeface_evidence ?? []).length === 0) {
+      return { grounded: false, unquoted: [], reason: "chose letterforms without quoting what chose them" };
+    }
+    if (unquoted.length > 0) {
+      return {
+        grounded: false,
+        unquoted,
+        reason: "justified the typeface with words the customer never wrote",
+      };
+    }
+  }
+
   const aesthetic = brief.aesthetic;
   if (!aesthetic) {
     return { grounded: false, unquoted: [], reason: "the brief carries no aesthetic derivation at all" };
@@ -77,13 +110,7 @@ export function checkAestheticGrounding(brief: BriefResult, request: string): Gr
     };
   }
 
-  const haystack = canonical(request);
-  const unquoted = evidence
-    .map((e) => e.quote)
-    .filter((quote) => {
-      const needle = canonical(quote);
-      return needle.length === 0 || !haystack.includes(needle);
-    });
+  const unquoted = unquotedIn(request, evidence.map((e) => e.quote));
 
   if (unquoted.length > 0) {
     return {

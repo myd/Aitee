@@ -4,7 +4,7 @@ import { Pipeline } from "../lib/pipeline/pipeline";
 import { ClaudeError } from "../lib/pipeline/claude";
 import { RendererError, type Renderer } from "../lib/pipeline/renderer";
 import { defaultConfig } from "../lib/pipeline/config";
-import { FakeJudge, FakeRenderer, brief, intake, review } from "./fixtures";
+import { FakeJudge, FakeRenderer, brief, intake, review, setText } from "./fixtures";
 
 const REQUEST = "my corgi, but make it interesting";
 
@@ -119,7 +119,7 @@ test("a confident-sounding pass below the threshold still goes to a person", asy
 test("any lettering at all is held, even when both reviewers pass it", async () => {
   const { pipeline } = build({
     intake: intake({ lettering: { wants_text: true, exact_string: "SLOW CLUB", uncertain: false } }),
-    brief: brief({ lettering: { has_text: true, exact_string: "SLOW CLUB" } }),
+    brief: brief({ lettering: setText("SLOW CLUB") }),
     reviews: [
       [
         review({ text_found: true, transcription: "SLOW CLUB" }),
@@ -163,7 +163,7 @@ test("a craft failure is retried with the reviewers' own words, then handed over
 test("text that does not match what was approved never prints through", async () => {
   const { pipeline } = build({
     intake: intake({ lettering: { wants_text: true, exact_string: "SLOW CLUB", uncertain: false } }),
-    brief: brief({ lettering: { has_text: true, exact_string: "SLOW CLUB" } }),
+    brief: brief({ lettering: setText("SLOW CLUB") }),
     reviews: [
       [
         review({ text_found: false, text_matches_approved: false }),
@@ -197,7 +197,7 @@ test("a renderer outage fails closed too", async () => {
 test("the art director cannot smuggle in lettering intake never approved", async () => {
   const { pipeline, renderer } = build({
     intake: intake({ lettering: { wants_text: false, exact_string: "", uncertain: false } }),
-    brief: brief({ lettering: { has_text: true, exact_string: "GOOD BOY" } }),
+    brief: brief({ lettering: setText("GOOD BOY") }),
     reviews: [[review(), review()]],
   });
 
